@@ -23,8 +23,7 @@ const Menuitems = [
     id: uniqueId(),
     title: "Users",
     icon: IconUsers,
-    href: "/utilities/typography",
-  },
+    href: "/users",  },
   {
     id: uniqueId(),
     title: "Companies",
