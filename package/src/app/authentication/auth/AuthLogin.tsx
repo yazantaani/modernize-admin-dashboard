@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Box,
   Typography,
@@ -7,10 +7,13 @@ import {
   Button,
   Stack,
   Checkbox,
+  Alert,
 } from "@mui/material";
 import Link from "next/link";
 
 import CustomTextField from "@/app/(DashboardLayout)/components/forms/theme-elements/CustomTextField";
+import { useAppDispatch } from "@/app/redux/store";
+import { login } from "@/app/redux/Auth/authSlice";
 
 interface loginType {
   title?: string;
@@ -18,81 +21,148 @@ interface loginType {
   subtext?: JSX.Element | JSX.Element[];
 }
 
-const AuthLogin = ({ title, subtitle, subtext }: loginType) => (
-  <>
-    {title ? (
-      <Typography fontWeight="700" variant="h2" mb={1}>
-        {title}
-      </Typography>
-    ) : null}
+const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
+  const dispatch = useAppDispatch(); 
+  const [credentials, setCredentials] = useState({
+    usernameOrEmail: "",
+    password: "",
+  });
+  const [errors, setErrors] = useState({ usernameOrEmail: "", password: "" });
+  const [loginError, setLoginError] = useState("");
 
-    {subtext}
+  const handleLogin = async () => {
+    let valid = true;
+    const newErrors = { usernameOrEmail: "", password: "" };
 
-    <Stack>
-      <Box>
-        <Typography
-          variant="subtitle1"
-          fontWeight={600}
-          component="label"
-          htmlFor="username"
-          mb="5px"
-        >
-          Username
+    if (!credentials.usernameOrEmail.trim()) {
+      newErrors.usernameOrEmail = "Email or Username is required.";
+      valid = false;
+    }
+    if (!credentials.password.trim()) {
+      newErrors.password = "Password is required.";
+      valid = false;
+    }
+
+    setErrors(newErrors);
+
+    if (!valid) return;
+
+    const resultAction = await dispatch(login(credentials));
+    if (login.fulfilled.match(resultAction)) {
+      window.location.href = "/"; 
+    } else {
+      setLoginError("Login failed. Please check your credentials."); 
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setCredentials((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    setErrors((prev) => ({
+      ...prev,
+      [name]: "",
+    }));
+  };
+
+  return (
+    <>
+      {title ? (
+        <Typography fontWeight="700" variant="h2" mb={1}>
+          {title}
         </Typography>
-        <CustomTextField variant="outlined" fullWidth />
-      </Box>
-      <Box mt="25px">
-        <Typography
-          variant="subtitle1"
-          fontWeight={600}
-          component="label"
-          htmlFor="password"
-          mb="5px"
-        >
-          Password
-        </Typography>
-        <CustomTextField type="password" variant="outlined" fullWidth />
-      </Box>
-      <Stack
-        justifyContent="space-between"
-        direction="row"
-        alignItems="center"
-        my={2}
-      >
-        <FormGroup>
-          <FormControlLabel
-            control={<Checkbox defaultChecked />}
-            label="Remeber this Device"
+      ) : null}
+
+      {subtext}
+
+      <Stack spacing={2}>
+        {loginError && <Alert severity="error">{loginError}</Alert>}
+        <Box>
+          <Typography
+            variant="subtitle1"
+            fontWeight={600}
+            component="label"
+            htmlFor="usernameOrEmail"
+            mb="5px"
+          >
+            Username or Email
+          </Typography>
+          <CustomTextField
+            variant="outlined"
+            fullWidth
+            name="usernameOrEmail"
+            value={credentials.usernameOrEmail}
+            onChange={handleChange}
+            error={!!errors.usernameOrEmail}
+            helperText={errors.usernameOrEmail} 
           />
-        </FormGroup>
-        <Typography
-          component={Link}
-          href="/"
-          fontWeight="500"
-          sx={{
-            textDecoration: "none",
-            color: "primary.main",
-          }}
+        </Box>
+
+        <Box>
+          <Typography
+            variant="subtitle1"
+            fontWeight={600}
+            component="label"
+            htmlFor="password"
+            mb="5px"
+          >
+            Password
+          </Typography>
+          <CustomTextField
+            type="password"
+            variant="outlined"
+            fullWidth
+            name="password"
+            value={credentials.password}
+            onChange={handleChange}
+            error={!!errors.password} 
+            helperText={errors.password}
+          />
+        </Box>
+
+        <Stack
+          justifyContent="space-between"
+          direction="row"
+          alignItems="center"
         >
-          Forgot Password ?
-        </Typography>
+          <FormGroup>
+            <FormControlLabel
+              control={<Checkbox defaultChecked />}
+              label="Remember this Device"
+            />
+          </FormGroup>
+          <Typography
+            component={Link}
+            href="/"
+            fontWeight="500"
+            sx={{
+              textDecoration: "none",
+              color: "primary.main",
+            }}
+          >
+            Forgot Password?
+          </Typography>
+        </Stack>
+
+        <Box>
+          <Button
+            color="primary"
+            variant="contained"
+            size="large"
+            fullWidth
+            onClick={handleLogin}
+          >
+            Sign In
+          </Button>
+        </Box>
       </Stack>
-    </Stack>
-    <Box>
-      <Button
-        color="primary"
-        variant="contained"
-        size="large"
-        fullWidth
-        component={Link}
-        href="/"
-        type="submit"
-      >
-        Sign In
-      </Button>
-    </Box>
-    {subtitle}
-  </>
-);
+
+      {subtitle}
+    </>
+  );
+};
 
 export default AuthLogin;

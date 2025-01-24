@@ -2,7 +2,8 @@ import {
   IconLayoutDashboard,
   IconBuilding,
   IconUsers,
-  IconTruck
+  IconTruck,
+  IconShoppingCart
 } from "@tabler/icons-react";
 
 import { uniqueId } from "lodash";
@@ -28,12 +29,18 @@ const Menuitems = [
     id: uniqueId(),
     title: "Companies",
     icon: IconBuilding,
-    href: "/utilities/shadow",
+    href: "/companies",
   },
   {
     id: uniqueId(),
     title: "Shipments",
     icon: IconTruck,
+    href: "/authentication/login",
+  },
+  {
+    id: uniqueId(),
+    title: "Orders",
+    icon: IconShoppingCart,
     href: "/authentication/login",
   },
 ];

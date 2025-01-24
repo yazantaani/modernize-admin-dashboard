@@ -1,21 +1,15 @@
 import React from 'react';
-import { Box, AppBar, Toolbar, styled, Stack, IconButton, Badge, Button } from '@mui/material';
+import { Box, AppBar, Toolbar, styled, Stack, IconButton, Badge } from '@mui/material';
 import PropTypes from 'prop-types';
-import Link from 'next/link';
 // components
 import Profile from './Profile';
 import { IconBellRinging, IconMenu } from '@tabler/icons-react';
 
 interface ItemType {
-  toggleMobileSidebar:  (event: React.MouseEvent<HTMLElement>) => void;
+  toggleMobileSidebar: (event: React.MouseEvent<HTMLElement>) => void;
 }
 
-const Header = ({toggleMobileSidebar}: ItemType) => {
-
-  // const lgUp = useMediaQuery((theme) => theme.breakpoints.up('lg'));
-  // const lgDown = useMediaQuery((theme) => theme.breakpoints.down('lg'));
-
-
+const Header = ({ toggleMobileSidebar }: ItemType) => {
   const AppBarStyled = styled(AppBar)(({ theme }) => ({
     boxShadow: 'none',
     background: theme.palette.background.paper,
@@ -33,38 +27,40 @@ const Header = ({toggleMobileSidebar}: ItemType) => {
   return (
     <AppBarStyled position="sticky" color="default">
       <ToolbarStyled>
+        {/* Sidebar toggle button */}
         <IconButton
           color="inherit"
           aria-label="menu"
           onClick={toggleMobileSidebar}
           sx={{
             display: {
-              lg: "none",
-              xs: "inline",
+              lg: 'none',
+              xs: 'inline',
             },
           }}
         >
           <IconMenu width="20" height="20" />
         </IconButton>
 
-
-        <IconButton
-          size="large"
-          aria-label="show 11 new notifications"
-          color="inherit"
-          aria-controls="msgs-menu"
-          aria-haspopup="true"
-        >
-          <Badge variant="dot" color="primary">
-            <IconBellRinging size="21" stroke="1.5" />
-          </Badge>
-
-        </IconButton>
+        {/* Spacer to push elements to the right */}
         <Box flexGrow={1} />
+
+        {/* Profile and notifications */}
         <Stack spacing={1} direction="row" alignItems="center">
-          <Button variant="contained" component={Link} href="/authentication/login"   disableElevation color="primary" >
-            Login
-          </Button>
+          {/* Notifications icon */}
+          <IconButton
+            size="large"
+            aria-label="show 11 new notifications"
+            color="inherit"
+            aria-controls="msgs-menu"
+            aria-haspopup="true"
+          >
+            <Badge variant="dot" color="primary">
+              <IconBellRinging size="21" stroke="1.5" />
+            </Badge>
+          </IconButton>
+
+          {/* User profile */}
           <Profile />
         </Stack>
       </ToolbarStyled>

@@ -1,7 +1,7 @@
 'use client';
 import { Grid, Box } from '@mui/material';
 import PageContainer from '@/app/(DashboardLayout)/components/container/PageContainer';
-import UserList from '../components/users/UserList';
+import CompaniesList from '../components/companies/CompaniesList';
 
 const Users = () => {
   return (
@@ -9,7 +9,7 @@ const Users = () => {
       <Box>
         <Grid container spacing={3}>
           <Grid item xs={12}>
-            <UserList />
+            <CompaniesList />
           </Grid>          
         </Grid>
       </Box>
