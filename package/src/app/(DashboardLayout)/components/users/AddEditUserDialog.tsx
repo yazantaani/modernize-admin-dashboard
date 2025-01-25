@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -7,20 +7,26 @@ import {
   Button,
   Avatar,
   TextField,
-  Grid,
   Box,
   Typography,
+  MenuItem,
+  Alert,
 } from '@mui/material';
 import { useDropzone } from 'react-dropzone';
+import { useAppDispatch } from '@/app/redux/store';
+import { updateUserProfile, createUser } from '@/app/redux/App/userSlice';
 
 interface AddEditUserDialogProps {
   open: boolean;
-  user: {
+  user?: {
     id: number | null;
-    name: string;
+    username: string;
+    full_name: string;
     email: string;
+    password: string;
+    phone: string;
     role: string;
-    avatar: string;
+    profile_image: string | File;
   } | null;
   onClose: () => void;
   onSave: (user: any) => void;
@@ -32,29 +38,113 @@ const AddEditUserDialog: React.FC<AddEditUserDialogProps> = ({
   onClose,
   onSave,
 }) => {
-  const [editUser, setEditUser] = useState(
-    user || { id: null, name: '', email: '', role: '', avatar: '' }
-  );
+  const dispatch = useAppDispatch();
 
-  const handleSave = () => {
-    onSave(editUser);
-    onClose();
+  const defaultUser = {
+    id: null,
+    username: '',
+    full_name: '',
+    email: '',
+    password: '',
+    phone: '',
+    role: 'user',
+    profile_image: '',
   };
 
-  // Drag-and-drop functionality
+  const [editUser, setEditUser] = useState(user || defaultUser);
+  const [errorMessages, setErrorMessages] = useState<string[]>([]);
+
+  useEffect(() => {
+    setEditUser(user || defaultUser);
+    setErrorMessages([]); // Clear errors when dialog is reopened
+  }, [user]);
+
+  const validateForm = () => {
+    const errors: string[] = [];
+    if (!editUser.username || editUser.username.length < 3 || editUser.username.length > 50) {
+      errors.push('Username must be between 3 and 50 characters.');
+    }
+    if (!editUser.full_name || editUser.full_name.length < 3 || editUser.full_name.length > 50) {
+      errors.push('Full name must be between 3 and 50 characters.');
+    }
+    if (!editUser.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editUser.email)) {
+      errors.push('Email must be a valid email address.');
+    }
+    if (editUser.id === null && (!editUser.password || editUser.password.length < 6)) {
+      errors.push('Password must be at least 6 characters for new users.');
+    }
+    return errors;
+  };
+
+  const handleSave = async () => {
+    const errors = validateForm();
+    if (errors.length > 0) {
+      setErrorMessages(errors);
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('username', editUser.username || '');
+    formData.append('full_name', editUser.full_name || '');
+    formData.append('email', editUser.email || '');
+    formData.append('phone', editUser.phone || '');
+    formData.append('role', editUser.role || '');
+
+    if (editUser.id === null) {
+      formData.append('password', editUser.password || '');
+    }
+
+    if (editUser.profile_image instanceof File) {
+      formData.append('profile_image', editUser.profile_image);
+    }
+
+    try {
+      if (editUser.id === null) {
+        // Call the createUser API if `id` is null
+        const createdUser = await dispatch(createUser(formData)).unwrap();
+        onSave(createdUser);
+      } else {
+        // Call the updateUserProfile API if `id` is not null
+        await dispatch(updateUserProfile({ userId: editUser.id, formData })).unwrap();
+        onSave(editUser);
+      }
+      onClose();
+    } catch (error) {
+      setErrorMessages(['An error occurred while saving the user. Please try again.']);
+    }
+  };
+
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: { 'image/*': ['.png', '.jpg', '.jpeg', '.gif'] },
     multiple: false,
     onDrop: (acceptedFiles) => {
       const file = acceptedFiles[0];
       if (file) {
-        const reader = new FileReader();
-        reader.onload = () =>
-          setEditUser((prev) => ({ ...prev, avatar: reader.result as string }));
-        reader.readAsDataURL(file);
+        setEditUser((prev) => ({ ...prev, profile_image: file }));
       }
     },
   });
+
+  const renderAvatar = () => {
+    if (editUser.profile_image instanceof File) {
+      const objectUrl = URL.createObjectURL(editUser.profile_image);
+      return (
+        <Avatar
+          src={objectUrl}
+          alt="User Avatar"
+          sx={{ width: 100, height: 100, mb: 2, border: '2px solid #1976d2' }}
+          onLoad={() => URL.revokeObjectURL(objectUrl)} // Clean up object URL
+        />
+      );
+    }
+    return (
+      <Avatar
+        src={editUser.profile_image || '/images/profile/default-avatar.jpg'}
+        alt="User Avatar"
+        sx={{ width: 100, height: 100, mb: 2, border: '2px solid #1976d2' }}
+      />
+    );
+  };
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -76,19 +166,15 @@ const AddEditUserDialog: React.FC<AddEditUserDialogProps> = ({
           gap: 3,
         }}
       >
-        {/* Avatar Preview */}
-        <Avatar
-          src={editUser.avatar || '/images/profile/default-avatar.jpg'}
-          alt="User Avatar"
-          sx={{
-            width: 100,
-            height: 100,
-            mb: 2,
-            border: '2px solid #1976d2',
-          }}
-        />
+        {errorMessages.length > 0 &&
+          errorMessages.map((msg, index) => (
+            <Alert severity="error" key={index}>
+              {msg}
+            </Alert>
+          ))}
 
-        {/* Drag-and-Drop Upload */}
+        {renderAvatar()}
+
         <Box
           {...getRootProps()}
           sx={{
@@ -118,7 +204,6 @@ const AddEditUserDialog: React.FC<AddEditUserDialogProps> = ({
           )}
         </Box>
 
-        {/* Form Fields */}
         <Box
           sx={{
             width: '100%',
@@ -128,19 +213,25 @@ const AddEditUserDialog: React.FC<AddEditUserDialogProps> = ({
           }}
         >
           <TextField
-            label="Name"
+            label="Username"
             variant="outlined"
-            value={editUser.name}
+            value={editUser.username}
             onChange={(e) =>
-              setEditUser((prev) => ({ ...prev, name: e.target.value }))
+              setEditUser((prev) => ({ ...prev, username: e.target.value }))
             }
             fullWidth
             InputLabelProps={{ shrink: true }}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 2,
-              },
-            }}
+          />
+
+          <TextField
+            label="Full Name"
+            variant="outlined"
+            value={editUser.full_name}
+            onChange={(e) =>
+              setEditUser((prev) => ({ ...prev, full_name: e.target.value }))
+            }
+            fullWidth
+            InputLabelProps={{ shrink: true }}
           />
 
           <TextField
@@ -152,13 +243,18 @@ const AddEditUserDialog: React.FC<AddEditUserDialogProps> = ({
             }
             fullWidth
             InputLabelProps={{ shrink: true }}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 2,
-              },
-            }}
           />
 
+          <TextField
+            label="Phone"
+            variant="outlined"
+            value={editUser.phone}
+            onChange={(e) =>
+              setEditUser((prev) => ({ ...prev, phone: e.target.value }))
+            }
+            fullWidth
+            InputLabelProps={{ shrink: true }}
+          />
           <TextField
             label="Role"
             variant="outlined"
@@ -167,13 +263,13 @@ const AddEditUserDialog: React.FC<AddEditUserDialogProps> = ({
               setEditUser((prev) => ({ ...prev, role: e.target.value }))
             }
             fullWidth
+            select
             InputLabelProps={{ shrink: true }}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 2,
-              },
-            }}
-          />
+          >
+            <MenuItem value="user">User</MenuItem>
+            <MenuItem value="superAdmin">Super Admin</MenuItem>
+            <MenuItem value="companyAdmin">Company Admin</MenuItem>
+          </TextField>
         </Box>
       </DialogContent>
       <DialogActions sx={{ justifyContent: 'center', gap: 2 }}>

@@ -29,7 +29,7 @@ import { useAppDispatch, useAppSelector } from "@/app/redux/store";
 import { fetchUsers } from "@/app/redux/App/userSlice";
 const UserList = () => {
   const dispatch = useAppDispatch();
-  const { users, loading, error } = useAppSelector((state) => state.user); // Access Redux state
+  const { users, loading, error } = useAppSelector((state) => state.user); 
 
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(0);
@@ -44,13 +44,11 @@ const UserList = () => {
   useEffect(() => {
     dispatch(fetchUsers());
   }, [dispatch]);
-  // Filter users by search query
   const filteredUsers = users.filter((user) =>
     user.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Handlers for dialogs
   const handleAddEditDialogOpen = (user: any | null) => {
     setEditUser(user);
     setIsAddEditDialogOpen(true);
@@ -62,7 +60,6 @@ const UserList = () => {
   };
 
   const handleSaveUser = (user: any) => {
-    // Replace with API call to save user if necessary
     console.log("Save user:", user);
   };
 
@@ -77,12 +74,10 @@ const UserList = () => {
   };
 
   const handleConfirmDelete = () => {
-    // Replace with API call to delete user if necessary
     console.log("Delete user with ID:", deleteUserId);
     handleDeleteDialogClose();
   };
 
-  // Handle status change
   const handleStatusChange = (id: number, newStatus: "Active" | "Inactive") => {
     console.log(`Change status for user ID ${id} to ${newStatus}`);
   };
@@ -94,7 +89,6 @@ const UserList = () => {
           User List
         </Typography>
         <Box display="flex" gap={2}>
-          {/* Search Bar */}
           <SearchBar value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
           <Button
             variant="contained"
@@ -184,16 +178,12 @@ const UserList = () => {
         onPageChange={(event, newPage) => setPage(newPage)}
         onRowsPerPageChange={(event) => setRowsPerPage(Number(event.target.value))}
       />
-
-      {/* Add/Edit User Dialog */}
       <AddEditUserDialog
         open={isAddEditDialogOpen}
-        user={editUser}
+        user={editUser} // Pass the user or null explicitly
         onClose={handleAddEditDialogClose}
         onSave={handleSaveUser}
       />
-
-      {/* Confirm Delete Dialog */}
       <ConfirmDeleteDialog
         open={isDeleteDialogOpen}
         onClose={handleDeleteDialogClose}
