@@ -10,7 +10,7 @@ interface User {
   email: string;
   createdAt: string;
   updatedAt: string;
-  image?: string;
+  profile_image?: string;
 }
 
 interface UserState {
@@ -28,7 +28,7 @@ const initialState: UserState = {
 export const fetchUsers = createAsyncThunk(
     "user/fetchUsers",
     async (_, { rejectWithValue }) => {
-      const token = localStorage.getItem("token"); // Retrieve token from localStorage
+      const token = localStorage.getItem("token"); 
       try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/get-users`, {
           method: "GET",

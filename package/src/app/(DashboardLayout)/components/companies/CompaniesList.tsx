@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Table,
   TableBody,
@@ -17,58 +17,48 @@ import {
   Typography,
   Select,
   MenuItem,
+  CircularProgress,
+  Alert,
 } from '@mui/material';
 import { Edit, Delete } from '@mui/icons-material';
 import AddEditCompanyDialog from '../companies/AddEditCompanyDialog';
 import ConfirmDeleteDialog from '../users/ConfirmDeleteDialog';
 import SearchBar from '../users/SearchBar';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-
-interface Company {
-  id: number;
-  name: string;
-  email: string;
-  industry: string;
-  logo: string;
-  status: 'Active' | 'Inactive';
-}
+import { useAppDispatch, useAppSelector } from '@/app/redux/store'; 
+import { fetchCompanies } from '@/app/redux/App/companySlice'; 
 
 const CompaniesList = () => {
-  const [companies, setCompanies] = useState<Company[]>([
-    {
-      id: 1,
-      name: 'Tech Solutions Inc.',
-      email: 'info@techsolutions.com',
-      industry: 'Technology',
-      logo: '/images/companies/2314025.jpg',
-      status: 'Active',
-    },
-    {
-      id: 2,
-      name: 'Green Energy Ltd.',
-      email: 'contact@greenenergy.com',
-      industry: 'Energy',
-      logo: '/images/companies/38_GreenEnergy.jpg',
-      status: 'Inactive',
-    },
-  ]);
+  const dispatch = useAppDispatch();
+  const { companies, loading, error } = useAppSelector((state) => state.company);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
   const [isAddEditDialogOpen, setIsAddEditDialogOpen] = useState(false);
-  const [editCompany, setEditCompany] = useState<Company | null>(null);
+  const [editCompany, setEditCompany] = useState(null);
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deleteCompanyId, setDeleteCompanyId] = useState<number | null>(null);
 
-  const filteredCompanies = companies.filter((company) =>
-    company.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    company.email.toLowerCase().includes(searchQuery.toLowerCase())
+  useEffect(() => {
+    dispatch(fetchCompanies());
+  }, [dispatch]);
+
+  const filteredCompanies = companies.filter(
+    (company) =>
+      company.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      company.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      company.phoneNumber?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleAddEditDialogOpen = (company: Company | null) => {
+  const paginatedCompanies = filteredCompanies.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage
+  );
+
+  const handleAddEditDialogOpen = (company: any | null) => {
     setEditCompany(company);
     setIsAddEditDialogOpen(true);
   };
@@ -76,14 +66,6 @@ const CompaniesList = () => {
   const handleAddEditDialogClose = () => {
     setEditCompany(null);
     setIsAddEditDialogOpen(false);
-  };
-
-  const handleSaveCompany = (company: Company) => {
-    if (company.id) {
-      setCompanies((prev) => prev.map((c) => (c.id === company.id ? company : c)));
-    } else {
-      setCompanies((prev) => [...prev, { ...company, id: Date.now() }]);
-    }
   };
 
   const handleDeleteDialogOpen = (id: number) => {
@@ -96,17 +78,8 @@ const CompaniesList = () => {
     setIsDeleteDialogOpen(false);
   };
 
-  const handleConfirmDelete = () => {
-    if (deleteCompanyId !== null) {
-      setCompanies((prev) => prev.filter((company) => company.id !== deleteCompanyId));
-    }
-    handleDeleteDialogClose();
-  };
-
   const handleStatusChange = (id: number, newStatus: 'Active' | 'Inactive') => {
-    setCompanies((prev) =>
-      prev.map((company) => (company.id === id ? { ...company, status: newStatus } : company))
-    );
+    console.log(`Change status for company ID ${id} to ${newStatus}`);
   };
 
   return (
@@ -129,86 +102,99 @@ const CompaniesList = () => {
         </Box>
       </Box>
 
-      <TableContainer component={Paper} sx={{ borderRadius: '10px', overflow: 'hidden' }}>
-        <Table>
-          <TableHead>
-            <TableRow sx={{ backgroundColor: '#f4f6f8' }}>
-              <TableCell>Logo</TableCell>
-              <TableCell>ID</TableCell>
-              <TableCell>Name</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Industry</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {filteredCompanies.map((company) => (
-              <TableRow key={company.id}>
-                <TableCell>
-                <Avatar
-                    src={company.logo}
-                    alt={company.name}
-                    sx={{
-                    width: 64,
-                    height: 64, 
-                    }}
-                />               
-                </TableCell>
-                <TableCell>{company.id}</TableCell>
-                <TableCell>{company.name}</TableCell>
-                <TableCell>{company.email}</TableCell>
-                <TableCell>{company.industry}</TableCell>
-                <TableCell>
-                  <Select
-                    value={company.status}
-                    onChange={(e) => handleStatusChange(company.id, e.target.value as 'Active' | 'Inactive')}
-                    size="small"
-                    sx={{
-                      backgroundColor: company.status === 'Active' ? '#e8f5e9' : '#ffebee',
-                      color: company.status === 'Active' ? '#388e3c' : '#d32f2f',
-                      fontWeight: 'bold',
-                    }}
-                  >
-                    <MenuItem value="Active">Active</MenuItem>
-                    <MenuItem value="Inactive">Inactive</MenuItem>
-                  </Select>
-                </TableCell>
-                <TableCell>
-                  <IconButton color="primary" onClick={() => handleAddEditDialogOpen(company)}>
-                    <Edit />
-                  </IconButton>
-                  <IconButton color="error" onClick={() => handleDeleteDialogOpen(company.id)}>
-                    <Delete />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      {loading && (
+        <Box display="flex" justifyContent="center" alignItems="center" height="300px">
+          <CircularProgress />
+        </Box>
+      )}
 
-      <TablePagination
-        rowsPerPageOptions={[5, 10, 30,50,100]}
-        component="div"
-        count={filteredCompanies.length}
-        rowsPerPage={rowsPerPage}
-        page={page}
-        onPageChange={(event, newPage) => setPage(newPage)}
-        onRowsPerPageChange={(event) => setRowsPerPage(Number(event.target.value))}
-      />
+      {error && <Alert severity="error">{error}</Alert>}
+
+      {!loading && !error && (
+        <>
+          <TableContainer component={Paper} sx={{ borderRadius: '10px', overflow: 'hidden' }}>
+            <Table>
+              <TableHead>
+                <TableRow sx={{ backgroundColor: '#f4f6f8' }}>
+                  <TableCell>Logo</TableCell>
+                  <TableCell>ID</TableCell>
+                  <TableCell>Name</TableCell>
+                  <TableCell>Email</TableCell>
+                  <TableCell>Phone Number</TableCell>
+                  <TableCell>Place</TableCell>
+                  <TableCell>Status</TableCell>
+                  <TableCell>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {paginatedCompanies.map((company) => (
+                  <TableRow key={company.companyId}>
+                    <TableCell>
+                      <Avatar
+                        src={company.logo}
+                        alt={company.name}
+                        sx={{ width: 64, height: 64 }}
+                      />
+                    </TableCell>
+                    <TableCell>{company.companyId}</TableCell>
+                    <TableCell>{company.name}</TableCell>
+                    <TableCell>{company.email}</TableCell>
+                    <TableCell>{company.phoneNumber || 'N/A'}</TableCell>
+                    <TableCell>{company.place}</TableCell>
+                    <TableCell>
+                      <Select
+                        value={company.isActive ? 'Active' : 'Inactive'}
+                        onChange={(e) =>
+                          handleStatusChange(company.companyId, e.target.value as 'Active' | 'Inactive')
+                        }
+                        size="small"
+                        sx={{
+                          backgroundColor: company.isActive ? '#e8f5e9' : '#ffebee',
+                          color: company.isActive ? '#388e3c' : '#d32f2f',
+                          fontWeight: 'bold',
+                        }}
+                      >
+                        <MenuItem value="Active">Active</MenuItem>
+                        <MenuItem value="Inactive">Inactive</MenuItem>
+                      </Select>
+                    </TableCell>
+                    <TableCell>
+                      <IconButton color="primary" onClick={() => handleAddEditDialogOpen(company)}>
+                        <Edit />
+                      </IconButton>
+                      <IconButton color="error" onClick={() => handleDeleteDialogOpen(company.companyId)}>
+                        <Delete />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+          <TablePagination
+            rowsPerPageOptions={[5, 10, 30, 50, 100]}
+            component="div"
+            count={filteredCompanies.length}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={(event, newPage) => setPage(newPage)}
+            onRowsPerPageChange={(event) => setRowsPerPage(Number(event.target.value))}
+          />
+        </>
+      )}
 
       <AddEditCompanyDialog
         open={isAddEditDialogOpen}
         company={editCompany}
         onClose={handleAddEditDialogClose}
-        onSave={handleSaveCompany}
+        onSave={() => {}}
       />
 
       <ConfirmDeleteDialog
         open={isDeleteDialogOpen}
         onClose={handleDeleteDialogClose}
-        onConfirm={handleConfirmDelete}
+        onConfirm={() => {}}
       />
     </Box>
   );

@@ -35,14 +35,9 @@ const Menuitems = [
     id: uniqueId(),
     title: "Shipments",
     icon: IconTruck,
-    href: "/authentication/login",
+    href: "/shipment",
   },
-  {
-    id: uniqueId(),
-    title: "Orders",
-    icon: IconShoppingCart,
-    href: "/authentication/login",
-  },
+  
 ];
 
 export default Menuitems;

@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
 interface AuthState {
-  user: { name: string; email: string } | null;
+  user: { name: string; email: string; role: string } | null;
   token: string | null;
   loading: boolean;
   error: string | null;
@@ -37,8 +37,8 @@ export const login = createAsyncThunk(
       }
 
       const data = await response.json();
-      console.log("data", data);
-      return data; // Adjust according to your API response
+      console.log("API Response:", data); // Debugging
+      return data; // Ensure the API response includes `user`, `role`, and `token`
     } catch (error: any) {
       return rejectWithValue(error.message);
     }
@@ -52,7 +52,7 @@ const authSlice = createSlice({
     logout: (state) => {
       state.user = null;
       state.token = null;
-      localStorage.removeItem("token"); 
+      localStorage.removeItem("token"); // Clear token
     },
   },
   extraReducers: (builder) => {
@@ -62,10 +62,15 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(login.fulfilled, (state, action) => {
+        console.log("Login Fulfilled - Payload:", action.payload); // Debugging
         state.loading = false;
-        state.user = action.payload.user; 
-        state.token = action.payload.token; 
-        localStorage.setItem("token", action.payload.token); 
+        state.user = {
+          name: action.payload.user.name,
+          email: action.payload.user.email,
+          role: action.payload.user.role, // Ensure this exists
+        };
+        state.token = action.payload.token;
+        localStorage.setItem("token", action.payload.token); // Persist token
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false;

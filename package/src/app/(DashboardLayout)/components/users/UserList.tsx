@@ -40,6 +40,8 @@ const UserList = () => {
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deleteUserId, setDeleteUserId] = useState<number | null>(null);
+  const token = localStorage.getItem("token");
+console.log("token", token);
 
   useEffect(() => {
     dispatch(fetchUsers());
@@ -132,8 +134,18 @@ const UserList = () => {
               {filteredUsers.map((user) => (
                 <TableRow key={user.userId}>
                   <TableCell>
-                    <Avatar src="/images/profile/default-avatar.jpg" alt={user.full_name} />
-                  </TableCell>
+                <Avatar
+                  src={
+                    user.profile_image
+                      ? user.profile_image.startsWith("http") // If it's a full URL
+                        ? user.profile_image
+                        : `${process.env.NEXT_PUBLIC_API_BASE_URL}/${user.profile_image}` // Append base URL if it's a relative path
+                      : "/images/profile/default-avatar.jpg" // Fallback to default image
+                  }
+                  alt={user.full_name}
+                  sx={{ width: 40, height: 40 }}
+                />
+              </TableCell>
                   <TableCell>{user.userId}</TableCell>
                   <TableCell>{user.full_name}</TableCell>
                   <TableCell>{user.email}</TableCell>
