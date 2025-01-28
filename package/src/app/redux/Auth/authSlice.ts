@@ -14,7 +14,6 @@ const initialState: AuthState = {
   error: null,
 };
 
-// Async thunk for login
 export const login = createAsyncThunk(
   "auth/login",
   async (
@@ -37,8 +36,8 @@ export const login = createAsyncThunk(
       }
 
       const data = await response.json();
-      console.log("API Response:", data); // Debugging
-      return data; // Ensure the API response includes `user`, `role`, and `token`
+      console.log("API Response:", data); 
+      return data; 
     } catch (error: any) {
       return rejectWithValue(error.message);
     }
@@ -52,7 +51,7 @@ const authSlice = createSlice({
     logout: (state) => {
       state.user = null;
       state.token = null;
-      localStorage.removeItem("token"); // Clear token
+      localStorage.removeItem("token");
     },
   },
   extraReducers: (builder) => {
@@ -62,15 +61,16 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(login.fulfilled, (state, action) => {
-        console.log("Login Fulfilled - Payload:", action.payload); // Debugging
+        console.log("Login Fulfilled - Payload:", action.payload); 
         state.loading = false;
         state.user = {
           name: action.payload.user.name,
           email: action.payload.user.email,
-          role: action.payload.user.role, // Ensure this exists
+          role: action.payload.user.role, 
         };
         state.token = action.payload.token;
-        localStorage.setItem("token", action.payload.token); // Persist token
+        localStorage.setItem("token", action.payload.token); 
+        localStorage.setItem("role", action.payload.user.role);
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false;

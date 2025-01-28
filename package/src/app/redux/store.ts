@@ -4,12 +4,16 @@ import authReducer from './Auth/authSlice';
 import userReducer from "./App/userSlice"; 
 import shipmentReducer from "./App/shipmentSlice";
 import companyReducer from "./App/companySlice";
+import tripReducer from "./App/tripSlice";
+import portReducer from "./App/portSlice";
 const store = configureStore({
   reducer: {
     auth: authReducer,
     user: userReducer,
     shipment: shipmentReducer,
     company: companyReducer,
+    trip: tripReducer,
+    ports: portReducer,
   },
 });
 

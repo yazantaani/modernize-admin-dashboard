@@ -26,7 +26,8 @@ const ShipmentList = () => {
   const { shipments, loading, error } = useAppSelector(
     (state) => state.shipment
   );
-
+const token = localStorage.getItem('token');
+console.log("token: ", token);  
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);

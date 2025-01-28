@@ -1,7 +1,7 @@
 'use client';
 import { Grid, Box } from '@mui/material';
 import PageContainer from '@/app/(DashboardLayout)/components/container/PageContainer';
-import CompaniesList from '../components/companies/CompaniesList';
+import CompaniesList from '../../components/companies/CompaniesList';
 
 const Users = () => {
   return (
