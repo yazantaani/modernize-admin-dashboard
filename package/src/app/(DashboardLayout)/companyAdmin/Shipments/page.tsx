@@ -1,14 +1,14 @@
 'use client';
 import { Grid, Box } from '@mui/material';
 import PageContainer from '@/app/(DashboardLayout)/components/container/PageContainer';
-import ShipmentList from '../../components/shipments/ShipmentList';
+import Shipments from '../../components/companies/Shipments';
 const Shipment = () => {
   return (
     <PageContainer title="Users" description="Manage and view user data">
       <Box>
         <Grid container spacing={3}>
           <Grid item xs={12}>
-            <ShipmentList />
+            <Shipments />
           </Grid>          
         </Grid>
       </Box>
