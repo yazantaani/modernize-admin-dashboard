@@ -4,6 +4,7 @@ import PageContainer from '@/app/(DashboardLayout)/components/container/PageCont
 import TripList from '../../components/trips/TripList';
 const Shipment = () => {
   return (
+    
     <PageContainer title="Users" description="Manage and view user data">
       <Box>
         <Grid container spacing={3}>

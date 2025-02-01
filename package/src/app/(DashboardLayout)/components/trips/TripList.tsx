@@ -1,3 +1,4 @@
+"use client";
 import React, { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/app/redux/store";
 import { addTrip, fetchTrips } from "@/app/redux/App/tripSlice";
@@ -14,12 +15,17 @@ import {
   Box,
   Button,
   Typography,
+  IconButton,
 } from "@mui/material";
+import { useRouter } from "next/navigation"; 
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
-import SearchBar from "../users/SearchBar"; // Reusable search bar component
+import InfoIcon from "@mui/icons-material/Info";
+import SearchBar from "../users/SearchBar";
 import AddTripModal from "./AddTripModal";
+
 const TripList = () => {
   const dispatch = useAppDispatch();
+  const router = useRouter(); 
   const { trips, loading, error } = useAppSelector((state) => state.trip);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -43,7 +49,6 @@ const TripList = () => {
       });
   };
 
-  // Filter trips based on search query
   const filteredTrips = trips.filter(
     (trip) =>
       trip.fromLocation.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -51,13 +56,8 @@ const TripList = () => {
       trip.serviceType.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  if (loading) {
-    return <CircularProgress />;
-  }
-
-  if (error) {
-    return <Alert severity="error">{error}</Alert>;
-  }
+  if (loading) return <CircularProgress />;
+  if (error) return <Alert severity="error">{error}</Alert>;
 
   return (
     <Box sx={{ width: "100%", margin: "0 auto", py: 3 }}>
@@ -68,50 +68,48 @@ const TripList = () => {
         alignItems="center"
         mb={3}
       >
-        {/* Title */}
         <Typography variant="h5" fontWeight="bold">
           Trip List
         </Typography>
 
-        {/* Action Row (Search Bar + Add Button) */}
         <Box display="flex" alignItems="center" gap={2}>
-          {/* Search Bar */}
           <SearchBar
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search trips..."
           />
 
-          {/* Add Trip Button */}
           <Button
             variant="contained"
             color="primary"
             startIcon={<AddCircleOutlineIcon />}
-            onClick={() => setIsModalOpen(true)} // Open the modal
+            onClick={() => setIsModalOpen(true)}
           >
             Add Trip
           </Button>
         </Box>
       </Box>
 
-      {/* Add Trip Modal */}
       <AddTripModal
         open={isModalOpen}
-        onClose={() => setIsModalOpen(false)} // Close the modal
-        onAddTrip={handleAddTrip} // Handle adding a trip
+        onClose={() => setIsModalOpen(false)}
+        onAddTrip={handleAddTrip}
       />
+      
 
-      {/* Trip Table */}
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
-            <TableRow sx={{ backgroundColor: "#f4f4f4" }}> {/* Light gray background */}
+            <TableRow sx={{ backgroundColor: "#f4f4f4" }}>
               <TableCell sx={{ fontWeight: "bold" }}>ID</TableCell>
-              <TableCell sx={{ fontWeight: "bold" }}>From Location</TableCell>
-              <TableCell sx={{ fontWeight: "bold" }}>To Location</TableCell>
+              <TableCell sx={{ fontWeight: "bold" }}>From</TableCell>
+              <TableCell sx={{ fontWeight: "bold" }}>To</TableCell>
               <TableCell sx={{ fontWeight: "bold" }}>Trip Date</TableCell>
               <TableCell sx={{ fontWeight: "bold" }}>Service Type</TableCell>
               <TableCell sx={{ fontWeight: "bold" }}>Price Per KG</TableCell>
+              <TableCell sx={{ fontWeight: "bold", textAlign: "center" }}>
+                Details
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -124,11 +122,22 @@ const TripList = () => {
                   <TableCell>{trip.tripDate}</TableCell>
                   <TableCell>{trip.serviceType}</TableCell>
                   <TableCell>{trip.pricePerKg}</TableCell>
+                  <TableCell align="center">
+                    <IconButton
+                      color="primary"
+                      onClick={() => {
+                        console.log(`Navigating to trip ID: ${trip.tripId}`);
+                        router.push(`details/trips/${trip.tripId}`);
+                      }}
+                     >
+                      <InfoIcon />
+                    </IconButton>
+                  </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} align="center">
+                <TableCell colSpan={7} align="center">
                   No trips found.
                 </TableCell>
               </TableRow>
